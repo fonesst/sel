@@ -2,7 +2,7 @@ import telebot
 import random
 
 # Токен вашего бота
-TOKEN = 'ВАШ_ТОКЕН_БОТА'
+TOKEN = '7368730334:AAH9xUG8G_Ro8mvV_fDQxd5ddkwjxHnBoeg'
 bot = telebot.TeleBot(TOKEN)
 
 # Полные списки имен
