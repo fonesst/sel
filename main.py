@@ -1,5 +1,6 @@
 import telebot
 import random
+from datetime import datetime
 
 # Токен вашего бота
 TOKEN = '7368730334:AAH9xUG8G_Ro8mvV_fDQxd5ddkwjxHnBoeg'
@@ -24,7 +25,6 @@ female_names = [
     "Надежда", "Наталья", "Ольга", "Полина", "Светлана", "София", "Татьяна", "Юлия", "Яна"
 ]
 
-# Списки фамилий
 male_surnames = [
     "Иванов", "Петров", "Сидоров", "Федоров", "Васильев", "Кузнецов", "Новиков", "Смирнов", 
     "Попов", "Киселев", "Зайцев", "Беляев", "Морозов", "Волков", "Соловьев", "Егоров", 
@@ -42,25 +42,68 @@ female_surnames = [
     "Борисова", "Фролова", "Карпова", "Шевченко", "Гончарова", "Мартынова", "Леонова"
 ]
 
-# Команда /genperson
+def generate_patronymic(name, gender):
+    if gender == 'Парень':
+        if name.endswith('й') or name.endswith('ь'):
+            return name[:-1] + 'евич'
+        else:
+            return name + 'ович'
+    else:
+        if name.endswith('й') or name.endswith('ь'):
+            return name[:-1] + 'евна'
+        else:
+            return name + 'овна'
+
+def generate_birthdate():
+    day = random.randint(1, 28)
+    month = random.randint(1, 12)
+    
+    # Выбираем век (19 или 20)
+    century = random.choice(['19', '20'])
+    
+    if century == '19':
+        year = random.randint(85, 99)
+        full_year = f"19{year}"
+    else:
+        year = random.randint(0, 12)
+        full_year = f"20{year:02d}"
+    
+    return f"{day:02d}.{month:02d}.{full_year}"
+
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    markup.add('/genperson')
+    bot.reply_to(message, "Привет! Используй /genperson для генерации случайной личности.", reply_markup=markup)
+
 @bot.message_handler(commands=['genperson'])
 def send_gender_choice(message):
     markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     markup.add('Парень', 'Девушка')
     bot.send_message(message.chat.id, "Выберите пол:", reply_markup=markup)
 
-# Обработка выбора пола
 @bot.message_handler(func=lambda message: message.text in ['Парень', 'Девушка'])
 def generate_person(message):
-    if message.text == 'Парень':
+    gender = message.text
+    if gender == 'Парень':
         name = random.choice(male_names)
         surname = random.choice(male_surnames)
     else:
         name = random.choice(female_names)
         surname = random.choice(female_surnames)
+    
+    patronymic = generate_patronymic(random.choice(male_names), gender)
+    birthdate = generate_birthdate()
+    
+    response = (
+        "Генерируемая личность:\n"
+        f"1. ФИО: {surname} {name} {patronymic}\n"
+        f"2. Дата рождения: {birthdate}"
+    )
+    
+    markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    markup.add('/genperson')
+    bot.send_message(message.chat.id, response, reply_markup=markup)
 
-    bot.send_message(message.chat.id, f"Генерируемая личность: {name} {surname}")
-
-# Запуск бота
 print("Бот запущен...")
 bot.infinity_polling()
